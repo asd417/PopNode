@@ -1,33 +1,38 @@
-import PyQt5.QtWidgets as pyqt
-import PyQt5.QtCore as qtc
-import PyQt5.QtGui as qtg
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import math
 
-class QDMGraphicsScene(pyqt.QGraphicsScene):
-    def __init__(self, parent=None):
+from node_console_connector import ConsoleConnector
+
+class QDMGraphicsScene(QGraphicsScene, ConsoleConnector):
+    def __init__(self, scene, parent=None):
         super().__init__(parent)
+
+        self.scene = scene
+        self.console = self.scene.console
 
         # settings
         self.gridSize = 20
         self.gridSquares = 5
         self.gridPenWidth = 1
 
-        self._color_background = qtg.QColor("#393939")
+        self._color_background = QColor("#393939")
 
-        self._color_light = qtg.QColor("#2f2f2f")
-        self._color_dark = qtg.QColor("#242424")
+        self._color_light = QColor("#2f2f2f")
+        self._color_dark = QColor("#242424")
 
-        self._pen_light = qtg.QPen(self._color_light)
+        self._pen_light = QPen(self._color_light)
         self._pen_light.setWidth(self.gridPenWidth)
 
-        self._pen_dark = qtg.QPen(self._color_dark)
+        self._pen_dark = QPen(self._color_dark)
         self._pen_dark.setWidth(self.gridPenWidth)
-
-        self.scene_width, self.scene_height = 64000, 64000
-        self.setSceneRect(-self.scene_width//2, -self.scene_height//2, self.scene_width, self.scene_height)
 
         self.setBackgroundBrush(self._color_background)
 
+
+    def setGrScene(self, width, height):
+        self.setSceneRect(-width//2, -height//2, width, height)
 
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)
@@ -45,14 +50,14 @@ class QDMGraphicsScene(pyqt.QGraphicsScene):
         lines_light, lines_dark = [], []
         for x in range(first_left, right, self.gridSize):
             if x % (self.gridSquares * self.gridSize) == 0:
-                lines_dark.append(qtc.QLine(x, top, x, bottom))
+                lines_dark.append(QLine(x, top, x, bottom))
             else:
-                lines_light.append(qtc.QLine(x, top, x, bottom))
+                lines_light.append(QLine(x, top, x, bottom))
         for y in range(first_top, bottom, self.gridSize):
             if y % (self.gridSquares * self.gridSize) == 0:
-                lines_dark.append(qtc.QLine(right, y, left, y))
+                lines_dark.append(QLine(right, y, left, y))
             else:
-                lines_light.append(qtc.QLine(right, y, left, y))
+                lines_light.append(QLine(right, y, left, y))
 
         # draw the lines
         painter.setPen(self._pen_light)
