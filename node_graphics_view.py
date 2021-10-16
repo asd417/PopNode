@@ -4,6 +4,7 @@ from PyQt5.QtCore import *
 
 from node_graphics_socket import QDMGraphicsSocket
 from node_graphics_edge import QDMGraphicsEdge
+from node_graphics_node import QDMGraphicsNode
 from node_edge import Edge, TYPE_BEZIER
 from node_console_connector import ConsoleConnector
 
@@ -40,6 +41,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
 
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setDragMode(QGraphicsView.RubberBandDrag)
         
     def mouseMoveEvent(self, event):
         if self.mode == MODE_EDGE_DRAG:
@@ -48,6 +50,20 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
             self.dragEdge.grEdge.update()
         
         super().mouseMoveEvent(event)
+        
+    def keyPressEvent(self, event):
+        self.printToConsole("Pressed: " + str(event.key()))
+        if event.key() == Qt.Key_Delete:
+            self.deleteSelected()
+        else:
+            super().keyPressEvent(event)
+    
+    def deleteSelected(self):
+        for item in self.grScene.selectedItems():
+            if isinstance(item, QDMGraphicsEdge):
+                item.edge.remove()
+            if isinstance(item, QDMGraphicsNode):
+                item.node.remove()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MiddleButton:
@@ -122,9 +138,9 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         item = self.getItemAtClick(event)
 
         if DEBUG:
-            if isinstance(item, QDMGraphicsEdge): self.printToConsole('RMB DEBUG:' + str(item.edge) + ' connecting sockets:',
-                                            str(item.edge.start_socket) + '<-->' + str(item.edge.end_socket))
-            if type(item) is QDMGraphicsSocket: self.printToConsole('RMB DEBUG:' + str(item.socket) + 'has edge:' + str(item.socket.edge))
+            if isinstance(item, QDMGraphicsEdge): self.printToConsole('RMB DEBUG: ' + str(item.edge) + ' connecting sockets:' + 
+                                                                      str(item.edge.start_socket) + ' <--> ' + str(item.edge.end_socket))
+            if type(item) is QDMGraphicsSocket: self.printToConsole('RMB DEBUG: ' + str(item.socket) + ' has edge: ' + str(item.socket.edge))
 
             if item is None:
                 self.printToConsole('SCENE:')

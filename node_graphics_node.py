@@ -40,11 +40,13 @@ class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
         
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
-        
+
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        self.node.updateConnectedEdges()
-        
+        for item in self.scene().scene.grScene.selectedItems():
+            if isinstance(item, QDMGraphicsNode):
+                item.node.updateConnectedEdges()
+
     @property
     def title(self):
         return self._title

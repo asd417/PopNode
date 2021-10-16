@@ -3,7 +3,7 @@ from node_content_widget import QDMNodeContentWidget
 from node_socket import Socket, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP, RIGHT_BOTTOM
 from node_console_connector import ConsoleConnector
 
-
+DEBUG = True
 class Node(ConsoleConnector):
     def __init__(self, scene, title="Undefined Node", inputs=[], outputs=[]):
         self.scene = scene
@@ -42,6 +42,18 @@ class Node(ConsoleConnector):
         for socket in self.inputs + self.outputs:
             if socket.hasEdge():
                 socket.edge.updatePositions()
+                
+    def remove(self):
+        if DEBUG: self.printToConsole("Removing Node" + str(self))
+
+        # remove all connected edges
+        for socket in (self.inputs + self.outputs):
+            if socket.hasEdge():
+                socket.edge.remove()
+        # remove grNode
+        self.scene.grScene.removeItem(self.grNode)
+        # remove node from scene
+        self.scene.removeNode(self)
 
     @property
     def pos(self):

@@ -9,6 +9,7 @@ from node_node import Node
 from node_edge import Edge
 from node_console import DebugConsole
 from node_console_connector import ConsoleConnector
+from ui import UI
 
 DEBUG = False
 
@@ -35,10 +36,13 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
         self.scene = Scene(self.console)
         # self.grScene = self.scene.grScene
         self.addNodes()
+        # self.addUI()
 
         # create Graphics View
         self.view = QDMGraphicsView(self.console, self.scene.grScene, self)
         self.layout.addWidget(self.view)
+        self.uiwidget = UI(self.scene)
+        self.layout.addWidget(self.uiwidget.graphics)
         # self.addDebugContent()
         if DEBUG:
             self.addDebugConsole()
@@ -57,6 +61,7 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
         
         edge1 = Edge(self.scene, node1.outputs[0], node2.inputs[0])
         edge2 = Edge(self.scene, node2.outputs[0], node3.inputs[0], type=2)
+        
         
     def addDebugConsole(self):
         self.console = DebugConsole(self.scene)
