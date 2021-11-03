@@ -1,7 +1,7 @@
 from node_graphics_scene import QDMGraphicsScene
 from node_console_connector import ConsoleConnector
 
-
+DEBUG = True
 class Scene(ConsoleConnector):
     def __init__(self, console):
         self.nodes = []
@@ -24,7 +24,13 @@ class Scene(ConsoleConnector):
         self.edges.append(edge)
 
     def removeNode(self, node):
-        self.nodes.remove(node)
+        try:
+            self.nodes.remove(node)
+        except:
+            if DEBUG: self.printToConsole('Scene::removeNode ~ Node Already Removed')
 
     def removeEdge(self, edge):
-        self.edges.remove(edge)
+        try:
+            self.edges.remove(edge)
+        except:
+            if DEBUG: self.printToConsole('Scene::removeEdge ~ Edge Already Removed')

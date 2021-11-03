@@ -45,9 +45,10 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         
     def mouseMoveEvent(self, event):
         if self.mode == MODE_EDGE_DRAG:
+            dragEdge_grEdge = self.dragEdge.grEdge
             pos = self.mapToScene(event.pos())
-            self.dragEdge.grEdge.setDestination(pos.x(), pos.y())
-            self.dragEdge.grEdge.update()
+            dragEdge_grEdge.setDestination(pos.x(), pos.y())
+            dragEdge_grEdge.update()
         
         super().mouseMoveEvent(event)
         
@@ -66,21 +67,23 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
                 item.node.remove()
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.MiddleButton:
+        button = event.button()
+        if button == Qt.MiddleButton:
             self.middleMouseButtonPress(event)
-        elif event.button() == Qt.LeftButton:
+        elif button == Qt.LeftButton:
             self.leftMouseButtonPress(event)
-        elif event.button() == Qt.RightButton:
+        elif button == Qt.RightButton:
             self.rightMouseButtonPress(event)
         else:
             super().mousePressEvent(event)
         
     def mouseReleaseEvent(self, event):
-        if event.button() == Qt.MiddleButton:
+        button = event.button()
+        if button == Qt.MiddleButton:
             self.middleMouseButtonRelease(event)
-        elif event.button() == Qt.LeftButton:
+        elif button == Qt.LeftButton:
             self.leftMouseButtonRelease(event)
-        elif event.button() == Qt.RightButton:
+        elif button == Qt.RightButton:
             self.rightMouseButtonRelease(event)
         else:
             super().mouseReleaseEvent(event)
@@ -149,7 +152,6 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
                 self.printToConsole('  Edges:')
                 for edge in self.grScene.scene.edges: self.printToConsole('    ' + str(edge))
 
-
     def rightMouseButtonRelease(self, event):
         super().mouseReleaseEvent(event)
 
@@ -190,27 +192,45 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
 
     def edgeDragEnd(self, item):
         """ Return true to skip rest of the code"""
+        dragEdge = self.dragEdge
+        prevEdge = self.previousEdge
+        last_start_socket = self.last_start_socket
         self.mode = MODE_NOOP
         if DEBUG: self.printToConsole('View::edgeDragEnd ~ End dragging edge')
-        if type(item) is QDMGraphicsSocket and item is not self.last_start_socket:
+        if self.edgeLogical(item):
             #assign end socket
-            if item.socket.hasEdge() and item.socket.edge is not self.dragEdge:
+            if item.socket.hasEdge() and item.socket.edge is not dragEdge:
                 item.socket.edge.remove()
             
-            if self.previousEdge is not None: self.previousEdge.remove()
-            
-            self.dragEdge.start_socket = self.last_start_socket
-            self.dragEdge.end_socket = item.socket
-            self.dragEdge.start_socket.setConnectedEdge(self.dragEdge)
-            self.dragEdge.end_socket.setConnectedEdge(self.dragEdge)
-            self.dragEdge.updatePositions()
+            if prevEdge is not None: prevEdge.remove()
+            if last_start_socket.iotype == 0: #if last_start_socket is input type
+                # reverse the start_socket and end_socket to fix
+                self.printToConsole("Edge started on Input type socket! Reversing order...")
+                dragEdge.start_socket = item.socket
+                dragEdge.end_socket = last_start_socket
+            else:
+                dragEdge.start_socket = last_start_socket
+                dragEdge.end_socket = item.socket
+            dragEdge.start_socket.setConnectedEdge(dragEdge)
+            dragEdge.end_socket.setConnectedEdge(dragEdge)
+            dragEdge.updatePositions()
             return True
         
-        self.dragEdge.remove()
-        self.dragEdge = None
-        if self.previousEdge is not None:
-            self.previousEdge.start_socket.edge = self.previousEdge
+        dragEdge.remove()
+        dragEdge = None
+        if prevEdge is not None:
+            prevEdge.start_socket.edge = prevEdge
 
+        return False
+    
+    def edgeLogical(self, item):
+        lastStartSocket = self.last_start_socket
+        if type(item) is QDMGraphicsSocket: 
+            itemSocket = item.socket
+            if itemSocket is not lastStartSocket:
+                if lastStartSocket.iotype != itemSocket.iotype:
+                    if lastStartSocket.node is not itemSocket.node:
+                        return True
         return False
 
     def deltaMouseClickRelease(self, event):

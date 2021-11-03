@@ -5,12 +5,16 @@ from node_console_connector import ConsoleConnector
 TYPE_DIRECT = 1
 TYPE_BEZIER = 2
 
+IOTYPE_INPUT = 0
+IOTYPE_OUTPUT = 1
+
+
 
 class Edge(ConsoleConnector):
     def __init__(self, scene, start_socket, end_socket, type=1):
         self.scene = scene
         self.console = self.scene.console
-
+        
         self.start_socket = start_socket
         self.end_socket = end_socket
 

@@ -6,6 +6,8 @@ LEFT_TOP = 1
 LEFT_BOTTOM = 2
 RIGHT_TOP = 3
 RIGHT_BOTTOM = 4
+IOTYPE_INPUT = 0
+IOTYPE_OUTPUT = 1
 
 class Socket(ConsoleConnector):
     def __init__(self, node, index=0, position=LEFT_TOP, socket_type=0):
@@ -15,6 +17,10 @@ class Socket(ConsoleConnector):
         self.index = index
         self.position = position
         self.socket_type = socket_type
+        if position == 1 or position == 2:
+            self.iotype = IOTYPE_INPUT
+        else:
+            self.iotype = IOTYPE_OUTPUT
 
         self.grSocket = QDMGraphicsSocket(self, socket_type)
         
@@ -37,14 +43,18 @@ class Socket(ConsoleConnector):
     
     def calculateSocketPosition(self, index, position):
         N = self.node
+        NgrN = N.grNode
+        padding = N.grNode._padding
+        edgeSize = N.grNode.edge_size
+        socketSpacing = N.socketSpacing
         if position in (LEFT_TOP, LEFT_BOTTOM):
             x = 0
         else:
-            x = self.node.grNode.width
+            x = N.grNode.width
 
         if position in (LEFT_TOP, RIGHT_TOP):
-            y = N.grNode.title_height + N.grNode.edge_size + N.grNode._padding + index * N.socketSpacing
+            y = NgrN.title_height + edgeSize + padding + index * socketSpacing
         else:
-            y = N.grNode.height - N.grNode.edge_size - N.grNode._padding - index * N.socketSpacing
+            y = NgrN.height - edgeSize - padding - index * socketSpacing
 
         return x, y

@@ -6,6 +6,9 @@ import math
 from node_socket import *
 from node_console_connector import ConsoleConnector
 
+DRAW_DRAG = 0
+DRAW_CONNECTED = 1
+
 class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
     def __init__(self, edge, parent=None):
         super().__init__(parent)
@@ -31,6 +34,8 @@ class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
         self.posSource = [0, 0]
         self.posDestination = [-200, -200]
         
+        self.drawmode = DRAW_CONNECTED # default is DRAW_CONNECTED
+        
     def setSource(self, x, y):
         self.posSource = [x, y]
     
@@ -40,9 +45,11 @@ class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
     def paint(self, painter, QStlyeOptionGraphicsItem, widget=None):
         self.updatePath()
         
-        if self.edge.end_socket is None:
+        if self.edge.end_socket is None: #drag mode edge
+            self.drawmode = DRAW_DRAG
             painter.setPen(self._pen_dragging)
         else:
+            self.drawmode = DRAW_CONNECTED
             painter.setPen(self._pen if not self.isSelected() else self._pen_selected)
         painter.setBrush(Qt.NoBrush)
         painter.drawPath(self.path())
@@ -60,10 +67,25 @@ class QDMGraphicsEdgeDirect(QDMGraphicsEdge):
     
 class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
     def updatePath(self):
-        path = QPainterPath(QPointF(self.posSource[0], self.posSource[1]))
+        posSource = self.posSource
+        posDestination = self.posDestination
+        if self.drawmode == DRAW_DRAG:
+            if self.edge.start_socket.iotype == 0:
+                #reverse posSource and posDestination
+                self.drawGeneric(posDestination, posSource)
+            else:
+                self.drawGeneric(posSource, posDestination)
+        elif self.drawmode == DRAW_CONNECTED:
+            self.drawGeneric(self.posSource, posDestination)
         
-        deltax = abs(self.posSource[0] - self.posDestination[0])
-        deltay = abs(self.posSource[1] - self.posDestination[1])
+        else:
+            raise NotImplemented("EDGE DRAWMODE UNKNOWN!!!(not DRAW_DRAG or DRAW_CONNECTED)")
+    
+    def drawGeneric(self, startpos, endpos):
+        path = QPainterPath(QPointF(startpos[0], startpos[1]))
+        
+        deltax = abs(startpos[0] - endpos[0])
+        deltay = abs(startpos[1] - endpos[1])
 
         if deltax < 150:
             if deltax <= 75:
@@ -77,7 +99,7 @@ class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
             deltax = 0
 
         path.cubicTo(
-            self.posSource[0] + deltax, self.posSource[1],
-            self.posDestination[0] - deltax, self.posDestination[1],
-            self.posDestination[0], self.posDestination[1])
+            startpos[0] + deltax, startpos[1],
+            endpos[0] - deltax, endpos[1],
+            endpos[0], endpos[1])
         self.setPath(path)
