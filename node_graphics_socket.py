@@ -4,10 +4,13 @@ from PyQt5.QtCore import *
 
 from node_console_connector import ConsoleConnector
 
+DEBUG = True
+
 class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
-    def __init__(self, socket, socket_type=0):
+    def __init__(self, socket, parent, socket_gr_type=0):
         self.socket = socket
-        super().__init__(socket.node.grNode)
+        #parent
+        super().__init__(parent)
         self.console = self.socket.console
 
         self.radius = 6.0
@@ -21,22 +24,29 @@ class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
             QColor("#FFdbe220"),
         ]
 
-        self._color_background = self._colors[socket_type]
+        self._color_background = self._colors[socket_gr_type]
         self._color_outline = QColor("#FF000000")
 
         self._pen = QPen(self._color_outline)
+        self._debugpen = QPen(QColor("#FF00EE"))
         self._pen.setWidthF(self.outline_width)
         self._brush = QBrush(self._color_background)
 
     def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
+        r = self.radius
         painter.setBrush(self._brush)
-        painter.setPen(self._pen)
-        painter.drawEllipse(-self.radius, -self.radius, 2*self.radius, 2*self.radius)
+        if DEBUG and self.socket.edge is not None:
+            painter.setPen(self._debugpen)
+        else:
+            painter.setPen(self._pen)
+        painter.drawEllipse(-r, -r, 2*r, 2*r)
 
     def boundingRect(self):
+        olw = self.outline_width
+        r = self.radius
         return QRectF(
-            -self.radius - self.outline_width,
-            -self.radius - self.outline_width,
-            2*(self.radius + self.outline_width),
-            2*(self.radius + self.outline_width)
+            -r - olw,
+            -r - olw,
+            2*(r + olw),
+            2*(r + olw)
         )

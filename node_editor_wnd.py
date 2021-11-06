@@ -10,6 +10,7 @@ from node_edge import Edge
 from node_console import DebugConsole
 from node_console_connector import ConsoleConnector
 from ui import UI
+from node_types.NodeTypes import *
 
 DEBUG = False
 
@@ -52,16 +53,18 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
 
     def addNodes(self):
         scene = self.scene
-        node1 = Node(scene, "New Node 1", inputs = [0,1], outputs = [1])
-        node2 = Node(scene, "New Node 2", inputs = [1,2,3], outputs = [0,4])
-        node3 = Node(scene, "New Node 3", inputs = [0,1], outputs = [1])
+        node1 = Node(scene, "New Node 1")
+        node2 = Node(scene, "New Node 2")
+        node3 = Node(scene, "New Node 3")
+        node4 = NT_Integer(scene)
         
         node1.setPos(-350, -250)
         node2.setPos(-75, 0)
         node2.setPos(200, -150)
+        node4.setPos(100, 100)
         
-        edge1 = Edge(scene, node1.outputs[0], node2.inputs[0])
-        edge2 = Edge(scene, node2.outputs[0], node3.inputs[0], type=2)
+        edge1 = Edge(scene, node1.outputSockets[0], node2.inputSockets[0])
+        edge2 = Edge(scene, node2.outputSockets[0], node3.inputSockets[0], type=2)
         
         
     def addDebugConsole(self):

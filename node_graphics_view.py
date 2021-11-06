@@ -184,6 +184,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         return obj
     
     def edgeDragStart(self, item):
+        #item type: QDMGraphicsSocket
         if DEBUG: self.printToConsole('View::edgeDragStart ~ Start dragging edge')
         if DEBUG: self.printToConsole('View::edgeDragStart ~   assign Start Socket')
         self.last_start_socket = item.socket
@@ -194,10 +195,13 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         """ Return true to skip rest of the code"""
         dragEdge = self.dragEdge
         prevEdge = self.previousEdge
+        
         last_start_socket = self.last_start_socket
         self.mode = MODE_NOOP
         if DEBUG: self.printToConsole('View::edgeDragEnd ~ End dragging edge')
+        if DEBUG: self.printToConsole('View::edgeDragEnd ~ ' + str(prevEdge))
         if self.edgeLogical(item):
+            if DEBUG: self.printToConsole('View::edgeDragEnd ~ Edge Logical')
             #assign end socket
             if item.socket.hasEdge() and item.socket.edge is not dragEdge:
                 item.socket.edge.remove()
@@ -220,6 +224,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         dragEdge = None
         if prevEdge is not None:
             prevEdge.start_socket.edge = prevEdge
+            prevEdge.end_socket.edge = prevEdge
 
         return False
     
