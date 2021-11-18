@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
+from node_socket import Socket, IOTYPE_INPUT, IOTYPE_OUTPUT
 from node_graphics_socket import QDMGraphicsSocket
 from node_graphics_edge import QDMGraphicsEdge
 from node_graphics_node import QDMGraphicsNode
@@ -10,6 +11,7 @@ from node_console_connector import ConsoleConnector
 
 MODE_NOOP = 1
 MODE_EDGE_DRAG = 2
+MODE_NODE_DRAG = 3
 EDGE_DRAG_THRESHOLD = 10
 
 DEBUG = True
@@ -62,7 +64,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
     def deleteSelected(self):
         for item in self.grScene.selectedItems():
             if isinstance(item, QDMGraphicsEdge):
-                item.edge.remove()
+                item.clearEdgeList()
             if isinstance(item, QDMGraphicsNode):
                 item.node.remove()
 
@@ -102,21 +104,31 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
 
     def leftMouseButtonPress(self, event):
         item = self.getItemAtClick(event)
-
+        pos = event.pos()
         self.last_lmb_click_scene_pos = self.mapToScene(event.pos())
 
         # for socket dragging
         if type(item) is QDMGraphicsSocket:
             if self.mode == MODE_NOOP:
+                existingEdgeList = item.socket.edgeList
+
                 self.mode = MODE_EDGE_DRAG
                 self.edgeDragStart(item)
                 # prevents the Node from moving when pressing part of the socket above nodes
                 return
-
-        if self.mode == MODE_EDGE_DRAG:
-            if self.edgeDragEnd(item):
-                # end dragging since item was pressed but mode was dragging
-                return
+        
+        if self.mode == MODE_NODE_DRAG:
+            return
+        
+        if self.mode == MODE_NOOP:
+                if DEBUG: self.printToConsole("Dragging Node")
+                widgets = self.getAllWidgetsAtPos(pos)
+                for widget in widgets:
+                    if DEBUG: self.printToConsole(f'{widget}')
+                    if widget != item and type(widget) is QDMGraphicsEdge:
+                        widget.setColor("#39E9c7")
+                        self.mode = MODE_NODE_DRAG
+                        return
 
         super().mousePressEvent(event)
 
@@ -124,15 +136,10 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
 
         item = self.getItemAtClick(event)
 
-        magSQdeltaMV = self.deltaMouseClickRelease(event)
-
         if self.mode == MODE_EDGE_DRAG:
-            # End draggin edge
-            # Magnitude SQuared of delta mouse vector
-            if magSQdeltaMV > EDGE_DRAG_THRESHOLD*EDGE_DRAG_THRESHOLD:
-                if self.edgeDragEnd(item):
-                    # Mouse Not Moved Enough
-                    return
+            # End dragging edge
+            self.edgeDragEnd(item)
+            return
 
         super().mouseReleaseEvent(event)
 
@@ -143,7 +150,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         if DEBUG:
             if isinstance(item, QDMGraphicsEdge): self.printToConsole('RMB DEBUG: ' + str(item.edge) + ' connecting sockets:' + 
                                                                       str(item.edge.start_socket) + ' <--> ' + str(item.edge.end_socket))
-            if type(item) is QDMGraphicsSocket: self.printToConsole('RMB DEBUG: ' + str(item.socket) + ' has edge: ' + str(item.socket.edge))
+            if type(item) is QDMGraphicsSocket: self.printToConsole('RMB DEBUG: ' + str(item.socket) + ' has' + str(len(item.socket.edgeList)) + 'edges')
 
             if item is None:
                 self.printToConsole('SCENE:')
@@ -187,55 +194,51 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         #item type: QDMGraphicsSocket
         if DEBUG: self.printToConsole('View::edgeDragStart ~ Start dragging edge')
         if DEBUG: self.printToConsole('View::edgeDragStart ~   assign Start Socket')
-        self.last_start_socket = item.socket
-        self.previousEdge = item.socket.edge
-        self.dragEdge = Edge(self.grScene.scene, item.socket, None, TYPE_BEZIER)
-
-    def edgeDragEnd(self, item):
-        """ Return true to skip rest of the code"""
-        dragEdge = self.dragEdge
-        prevEdge = self.previousEdge
-        
-        last_start_socket = self.last_start_socket
-        self.mode = MODE_NOOP
-        if DEBUG: self.printToConsole('View::edgeDragEnd ~ End dragging edge')
-        if DEBUG: self.printToConsole('View::edgeDragEnd ~ ' + str(prevEdge))
-        if self.edgeLogical(item):
-            if DEBUG: self.printToConsole('View::edgeDragEnd ~ Edge Logical')
-            #assign end socket
-            if item.socket.hasEdge() and item.socket.edge is not dragEdge:
-                item.socket.edge.remove()
-            
-            if prevEdge is not None: prevEdge.remove()
-            if last_start_socket.iotype == 0: #if last_start_socket is input type
-                # reverse the start_socket and end_socket to fix
-                self.printToConsole("Edge started on Input type socket! Reversing order...")
-                dragEdge.start_socket = item.socket
-                dragEdge.end_socket = last_start_socket
-            else:
-                dragEdge.start_socket = last_start_socket
-                dragEdge.end_socket = item.socket
-            dragEdge.start_socket.setConnectedEdge(dragEdge)
-            dragEdge.end_socket.setConnectedEdge(dragEdge)
-            dragEdge.updatePositions()
-            return True
-        
-        dragEdge.remove()
-        dragEdge = None
-        if prevEdge is not None:
-            prevEdge.start_socket.edge = prevEdge
-            prevEdge.end_socket.edge = prevEdge
-
-        return False
-    
-    def edgeLogical(self, item):
-        lastStartSocket = self.last_start_socket
+        itemSocket = item.socket
         if type(item) is QDMGraphicsSocket: 
-            itemSocket = item.socket
-            if itemSocket is not lastStartSocket:
-                if lastStartSocket.iotype != itemSocket.iotype:
-                    if lastStartSocket.node is not itemSocket.node:
-                        return True
+            self.dragEdgeStartingSocket = itemSocket
+
+            self.dragEdge = Edge(self.grScene.scene, itemSocket, None, TYPE_BEZIER)
+
+    #TODO Fix so that edge calling uses edgeList
+    def edgeDragEnd(self, item):
+        self.mode = MODE_NOOP
+        dragEdge = self.dragEdge
+        if type(item) is not QDMGraphicsSocket:
+            # edge dragged to empty space 
+            dragEdge.remove()
+            return
+
+        dragEdgeStartingSocket = self.dragEdgeStartingSocket
+        targetEdgeEndingSocket = item.socket
+        if DEBUG: self.printToConsole('View::edgeDragEnd ~ End dragging edge')
+        # check if the edge creation is valid with the two given sockets
+        if self.edgeLogical(dragEdgeStartingSocket, targetEdgeEndingSocket):
+            if dragEdgeStartingSocket.hasEdge() and dragEdgeStartingSocket.iotype == IOTYPE_INPUT:
+                dragEdgeStartingSocket.clearEdgeList()
+            elif targetEdgeEndingSocket.hasEdge() and targetEdgeEndingSocket.iotype == IOTYPE_INPUT:
+                targetEdgeEndingSocket.clearEdgeList()
+            if DEBUG: self.printToConsole('View::edgeDragEnd ~ Edge Logical')
+
+            if dragEdgeStartingSocket.iotype == IOTYPE_INPUT:
+                # reverse the start_socket and end_socket to fix
+                # end_socket of any edge should has iotype of IOTYPE_INPUT
+                self.printToConsole("Edge started on Input type socket! Reversing order...")
+                dragEdge.start_socket = targetEdgeEndingSocket
+                dragEdge.end_socket = dragEdgeStartingSocket
+            else:
+                dragEdge.start_socket = dragEdgeStartingSocket
+                dragEdge.end_socket = targetEdgeEndingSocket
+            dragEdge.start_socket.addEdge(dragEdge)
+            dragEdge.end_socket.addEdge(dragEdge)
+            dragEdge.updatePositions()
+        else:
+            dragEdge.remove()
+
+    def edgeLogical(self, startingSocket, endingSocket):
+        if (not startingSocket is None) and (not endingSocket is None):
+            if (endingSocket is not startingSocket) and (startingSocket.iotype != endingSocket.iotype) and (startingSocket.node is not endingSocket.node):
+                return True
         return False
 
     def deltaMouseClickRelease(self, event):
@@ -243,3 +246,32 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         new_lmb_release_scene_pos = self.mapToScene(event.pos())
         deltaMouseV = new_lmb_release_scene_pos - self.last_lmb_click_scene_pos
         return (deltaMouseV.x() * deltaMouseV.x()) + (deltaMouseV.y() * deltaMouseV.y())
+
+
+     # Source: https://stackoverflow.com/questions/27363267/get-all-widgets-under-cursor
+    def getAllWidgetsAtPos(self, pos):
+        return [w for w in self.widgets_at(pos)]
+    
+    def widgets_at(self, pos):
+        """Return ALL widgets at `pos`
+
+        Arguments:
+            pos (QPoint): Position at which to get widgets
+
+        """
+
+        widgets = []
+        widget_at = qApp.widgetAt(pos)
+
+        while widget_at:
+            widgets.append(widget_at)
+
+            # Make widget invisible to further enquiries
+            widget_at.setAttribute(Qt.WA_TransparentForMouseEvents)
+            widget_at = qApp.widgetAt(pos)
+
+        # Restore attribute
+        for widget in widgets:
+            widget.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+
+        return widgets

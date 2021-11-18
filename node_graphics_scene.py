@@ -35,6 +35,7 @@ class QDMGraphicsScene(QGraphicsScene, ConsoleConnector):
         self.setSceneRect(-width//2, -height//2, width, height)
 
     def drawBackground(self, painter, rect):
+        gridSize = self.gridSize
         super().drawBackground(painter, rect)
 
         # create grid
@@ -43,18 +44,18 @@ class QDMGraphicsScene(QGraphicsScene, ConsoleConnector):
         top = int(math.floor(rect.top()))
         bottom = int(math.ceil(rect.bottom()))
         
-        first_left = left - (left % self.gridSize)
-        first_top = top - (top % self.gridSize)
+        first_left = left - (left % gridSize)
+        first_top = top - (top % gridSize)
 
         # compute all lines to be drawn
         lines_light, lines_dark = [], []
-        for x in range(first_left, right, self.gridSize):
-            if x % (self.gridSquares * self.gridSize) == 0:
+        for x in range(first_left, right, gridSize):
+            if x % (self.gridSquares * gridSize) == 0:
                 lines_dark.append(QLine(x, top, x, bottom))
             else:
                 lines_light.append(QLine(x, top, x, bottom))
-        for y in range(first_top, bottom, self.gridSize):
-            if y % (self.gridSquares * self.gridSize) == 0:
+        for y in range(first_top, bottom, gridSize):
+            if y % (self.gridSquares * gridSize) == 0:
                 lines_dark.append(QLine(right, y, left, y))
             else:
                 lines_light.append(QLine(right, y, left, y))

@@ -1,6 +1,6 @@
 from node_graphics_node import QDMGraphicsNode, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP, RIGHT_BOTTOM
 from node_content_widget import QDMNodeContentWidget
-from node_socket import Socket
+from node_socket import Socket, IOTYPE_INPUT, IOTYPE_OUTPUT
 from node_console_connector import ConsoleConnector
 
 DEBUG = True
@@ -12,31 +12,58 @@ class Node(ConsoleConnector):
 
         self.initContent()
         content = self.content
-        self.inputs = content.getInputs()
-        self.outputs = content.getOutputs()
+        self.inputs = content.getInputSocketTypes()
+        self.outputs = content.getOutputSocketTypes()
 
         self.generateSockets()
-        
+
         self.loadGraphics()
-        self.content.grNodeEdit()
-        self.grNode.updateGR()
+
+        if self.inputs is not None:
+            self.inputValues = [None] * self.content.slotCount
+        else:
+            self.inputValues = None
+
+        if self.outputs is not None:
+            self.outputValues = [None] * self.content.slotCount
+        else:
+            self.outputValues = None
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
-    
+
     # Override this function to set custom content
     def initContent(self):
-        self.content = QDMNodeContentWidget()
-
-    # content is a custom object that inherits QDMNodeContentWidget
-    def overrideContent(self, content):
-        self.content = content
-        self.grNode.overrideContent(content)
+        self.content = QDMNodeContentWidget(self)
 
     def updateConnectedEdges(self):
         for socket in self.inputSockets + self.outputSockets:
+            if DEBUG: self.printToConsole("checking if " + str(socket) + "has Edge")
             if socket.hasEdge():
-                socket.edge.updatePositions()
+                
+                socket.updateEdgePositions()
+                
+    def updateConnectedNodes(self):
+        for socket in self.outputSockets:
+            if socket.hasEdge():
+                for edge in socket.edgeList:
+                    if edge.end_socket.iotype == IOTYPE_INPUT:
+                        edge.end_socket.node.updateThisNode()
+                
+    def updateInputValues(self):
+        if DEBUG: self.printToConsole("updateInputValues called on" + str(self))
+        if len(self.inputSockets) != 0:
+            i = 0
+            for socket in self.inputSockets:
+                self.inputValues[i] = socket.loadValue()
+                i += 1
+    
+    def updateThisNode(self):
+        self.updateInputValues()
+                
+        self.onNodeUpdate()
+                
+        self.updateConnectedNodes()
 
     def remove(self):
         if DEBUG: self.printToConsole("Removing Node" + str(self))
@@ -44,7 +71,7 @@ class Node(ConsoleConnector):
         # remove all connected edges
         for socket in (self.inputSockets + self.outputSockets):
             if socket.hasEdge():
-                socket.edge.remove()
+                socket.clearEdgeList()
         # remove grNode
         self.scene.grScene.removeItem(self.grNode)
         # remove node from scene
@@ -55,18 +82,20 @@ class Node(ConsoleConnector):
         self.outputSockets = []
 
         if self.inputs is not None and len(self.inputs) > 0:
-            counter = 0
-            for item in self.inputs:
-                socket = Socket(node=self, index=counter, position=LEFT_BOTTOM, socket_gr_type=item)
+            
+            # A socket is defined by Tuple as explained in node_content_widget.py therefore a variable name definitionTuple is used here
+            for definitionTuple in self.inputs:
+                Sindex = definitionTuple[0]
+                Stype = definitionTuple[1]
+                socket = Socket(node=self, index=Sindex, iotype=0, socket_gr_type=Stype)
                 self.inputSockets.append(socket)
-                counter += 1
 
         if self.outputs is not None and len(self.outputs) > 0:
-            counter = 0
-            for item in self.outputs:
-                socket = Socket(node=self, index=counter, position=RIGHT_TOP, socket_gr_type=item)
+            for definitionTuple in self.outputs:
+                Sindex = definitionTuple[0]
+                Stype = definitionTuple[1]
+                socket = Socket(node=self, index=Sindex, iotype=1, socket_gr_type=Stype)
                 self.outputSockets.append(socket)
-                counter += 1
 
     def loadGraphics(self):
         self.grNode = QDMGraphicsNode(self)
@@ -81,4 +110,7 @@ class Node(ConsoleConnector):
 
     def setPos(self, x, y):
         self.grNode.setPos(x, y)
+        
+    def onNodeUpdate(self):
+        pass
         

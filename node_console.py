@@ -1,5 +1,7 @@
 from node_graphics_console import QDMConsole
 from queue import Queue
+
+DEBUG = True
 class DebugConsole:
     def __init__(self, lineCount=10):
         self.scene = None
@@ -9,9 +11,11 @@ class DebugConsole:
 
         self.grConsole = QDMConsole(self)
         
-        for line in range(lineCount):
-            self.lineQ.put("TEST{num}".format(num=line))
+        if DEBUG:
+            for line in range(lineCount):
+                self.lineQ.put("TEST{num}".format(num=line))
         
     def setScene(self, scene):
+        scene.grScene.addItem(self.grConsole)
         self.scene = scene
-        self.scene.grScene.addItem(self.grConsole)
+        

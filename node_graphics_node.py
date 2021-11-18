@@ -10,6 +10,9 @@ LEFT_TOP = 1
 LEFT_BOTTOM = 2
 RIGHT_TOP = 3
 RIGHT_BOTTOM = 4
+
+IOTYPE_INPUT = 0
+IOTYPE_OUTPUT = 1
 class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
     def __init__(self, node, parent=None):
         super().__init__(parent)
@@ -20,42 +23,55 @@ class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
         self._title_color = Qt.white
         self._title_font = QFont("Ubuntu", 15)
 
-        self.width = 180
-        self.height = 240
-        self.edge_size = 10.0
-        self.title_height = 24
-        self._padding = 5.0
-
         self._pen_default = QPen(QColor("#7F000000"))
         self._pen_selected = QPen(QColor("#FFFFA637"))
 
         self._brush_title = QBrush(QColor("#FF313131"))
         self._brush_background = QBrush(QColor("#E3212121"))
         
+        # Override if specified
+        if self.content.width is not None:
+            self.width = self.content.width
+        else:
+            self.width = 180
+        if self.content.height is not None:
+            self.height = self.content.height
+        else:
+            self.height = 240
+        if self.content.edge_size is not None:
+            self.edge_size = self.content.edge_size
+        else:
+            self.edge_size = 10.0
+        if self.content.title_height is not None:
+            self.title_height = self.content.title_height
+        else:
+            self.title_height = 24
+        if self.content.padding is not None:
+            self._padding = self.content.padding
+        else:
+            self._padding = 5.0
+        
+
         self.socketSpacing = 25
         self.grContent = None
         
+        self.widgetSlots = self.node.content.widgetSlots
+
+        # init title
+        self.initTitle()
+        self.title = self.node.title
+
+        self.initContent()
+        self.initUI()
+        
+        # init sockets
         self.initSockets(self.node.inputSockets)
         self.initSockets(self.node.outputSockets)
+        
+        self.setAcceptDrops(True)
 
     def __str__(self):
         return "<Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
-
-    def calculateSocketPosition(self, index, position):
-        padding = self._padding
-        edgeSize = self.edge_size
-        socketSpacing = self.socketSpacing
-        if position in (LEFT_TOP, LEFT_BOTTOM):
-            x = 0
-        else:
-            x = self.width
-
-        if position in (LEFT_TOP, RIGHT_TOP):
-            y = self.title_height + edgeSize + padding + index * socketSpacing
-        else:
-            y = self.height - edgeSize - padding - index * socketSpacing
-
-        return x, y
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -85,13 +101,14 @@ class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
         self.setFlag(QGraphicsItem.ItemIsMovable)
 
     def initTitle(self):
-        self.title_item = QGraphicsTextItem(self)
-        self.title_item.setDefaultTextColor(self._title_color)
-        self.title_item.setFont(self._title_font)
-        self.title_item.setPos(self._padding, 0)
-        self.title_item.setTextWidth(
+        title_item = QGraphicsTextItem(self)
+        title_item.setDefaultTextColor(self._title_color)
+        title_item.setFont(self._title_font)
+        title_item.setPos(self._padding, 0)
+        title_item.setTextWidth(
             self.width - 2*self._padding
         )
+        self.title_item = title_item
 
     def initContent(self):
         edgeSize = self.edge_size
@@ -104,8 +121,26 @@ class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
 
     def initSockets(self, socketlist):
         for socket in socketlist:
-            self.grSocket = QDMGraphicsSocket(socket, self, socket.socket_gr_type)
-            self.grSocket.setPos(*self.calculateSocketPosition(socket.index, socket.position))
+            grSocket = QDMGraphicsSocket(socket, self)
+            socket.grSocket = grSocket
+            grSocket.setPos(*self.calculateSocketPosition(socket))
+                
+    def calculateSocketPosition(self, socket):
+        iotype = socket.iotype
+        index = socket.index
+        padding = self._padding
+        edgeSize = self.edge_size
+        socketSlot = self.widgetSlots[index]
+        
+        mappedPoint = socketSlot.mapToParent(socketSlot.rect().center())
+        y = mappedPoint.y() + self.title_height + edgeSize
+
+        if iotype == 0: # if iotype == input
+            x = 0
+        else:
+            x = self.width
+        return x, y
+
     
     def setHeight(self, num):
         self.height = num
@@ -113,30 +148,7 @@ class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
     def setWidth(self, num):
         self.width = num
 
-    def overrideContent(self, content):
-        self.content = content
-        self.updateGR()
-        
-    def updateGR(self):
-        # Clears original QGraphicsProxyWidget
-        if self.grContent is not None:
-            self.grContent.setParent(None)
-            del self.grContent
-            
-        # init title
-        self.initTitle()
-        self.title = self.node.title
-
-        # init sockets
-        self.initSockets(self.node.inputSockets)
-        self.initSockets(self.node.outputSockets)
-        
-        # init content
-        self.initContent()
-
-        self.initUI()
-
-    def paint(self,painter,QStyleOptionGraphicsItem, widget= None):
+    def paint(self, painter,QStyleOptionGraphicsItem, widget= None):
         height = self.height
         width = self.width
         title_height = self.title_height

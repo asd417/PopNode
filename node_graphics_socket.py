@@ -7,7 +7,7 @@ from node_console_connector import ConsoleConnector
 DEBUG = True
 
 class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
-    def __init__(self, socket, parent, socket_gr_type=0):
+    def __init__(self, socket, parent):
         self.socket = socket
         #parent
         super().__init__(parent)
@@ -24,7 +24,7 @@ class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
             QColor("#FFdbe220"),
         ]
 
-        self._color_background = self._colors[socket_gr_type]
+        self._color_background = self._colors[socket.socket_gr_type]
         self._color_outline = QColor("#FF000000")
 
         self._pen = QPen(self._color_outline)
@@ -35,7 +35,7 @@ class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
     def paint(self, painter, QStyleOptionGraphicsItem, widget=None):
         r = self.radius
         painter.setBrush(self._brush)
-        if DEBUG and self.socket.edge is not None:
+        if DEBUG and len(self.socket.edgeList) != 0:
             painter.setPen(self._debugpen)
         else:
             painter.setPen(self._pen)

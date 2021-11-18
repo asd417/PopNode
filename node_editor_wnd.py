@@ -10,22 +10,21 @@ from node_edge import Edge
 from node_console import DebugConsole
 from node_console_connector import ConsoleConnector
 from ui import UI
-from node_types.NodeTypes import *
+from Node_Types import *
 
-DEBUG = False
+import glob, os
+
+DEBUG = True
 
 class NodeEditorWnd(QWidget, ConsoleConnector):
     def __init__(self, parent=None):
         super().__init__(parent)
-        
-
         self.loadStylesheet("qss/nodestyle.qss")
         self.console = DebugConsole()
         self.initUI()
         self.console.setScene(self.scene)
         
         
-
     def initUI(self):
         self.setGeometry(0, 0, 800, 600)
 
@@ -42,33 +41,39 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
         # create Graphics View
         self.view = QDMGraphicsView(self.console, self.scene.grScene, self)
         self.layout.addWidget(self.view)
-        self.uiwidget = UI(self.scene)
+        nodetypes = self._getNodeTypes()
+        self.uiwidget = UI(self.scene, nodetypes)
         self.layout.addWidget(self.uiwidget.graphics)
-        # self.addDebugContent()
-        if DEBUG:
-            self.addDebugConsole()
 
         self.setWindowTitle("Node Editor")
         self.show()
+        
+    def _getNodeTypes(self):
+        os.chdir("./Node_Types")
+        nodeTypeList = []
+        for file in glob.glob("*.py"):
+            if file != '__init__.py':
+                file = file[:-3]
+                nodeTypeList.append(file)
+        return nodeTypeList
 
     def addNodes(self):
         scene = self.scene
         node1 = Node(scene, "New Node 1")
         node2 = Node(scene, "New Node 2")
         node3 = Node(scene, "New Node 3")
-        node4 = NT_Integer(scene)
-        
+        node4 = Integer.NT_Integer(scene)
+        node5 = Printer.NT_Printer(scene)
+        node6 = Printer.NT_Printer(scene)
+        node7 = Integer.NT_Integer(scene)
+
         node1.setPos(-350, -250)
         node2.setPos(-75, 0)
-        node2.setPos(200, -150)
-        node4.setPos(100, 100)
+        node3.setPos(200, -150)
+        #node4.setPos(100, 100)
         
-        edge1 = Edge(scene, node1.outputSockets[0], node2.inputSockets[0])
-        edge2 = Edge(scene, node2.outputSockets[0], node3.inputSockets[0], type=2)
-        
-        
-    def addDebugConsole(self):
-        self.console = DebugConsole(self.scene)
+        # edge1 = Edge(scene, node1.outputSockets[0], node2.inputSockets[0])
+        # edge2 = Edge(scene, node2.outputSockets[0], node3.inputSockets[0], type=2)
         
     def addDebugContent(self):
         greenBrush = QBrush(Qt.green)
