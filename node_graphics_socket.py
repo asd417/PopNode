@@ -2,11 +2,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
-from node_console_connector import ConsoleConnector
+DEBUG = False
 
-DEBUG = True
-
-class QDMGraphicsSocket(QGraphicsItem, ConsoleConnector):
+class QDMGraphicsSocket(QGraphicsItem):
     def __init__(self, socket, parent):
         self.socket = socket
         #parent

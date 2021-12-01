@@ -7,23 +7,21 @@ from node_graphics_view import QDMGraphicsView
 from node_scene import Scene
 from node_node import Node
 from node_edge import Edge
-from node_console import DebugConsole
-from node_console_connector import ConsoleConnector
+from node_console import ConsoleLog
 from ui import UI
+from random import randint
+
 from Node_Types import *
 
 import glob, os
 
 DEBUG = True
 
-class NodeEditorWnd(QWidget, ConsoleConnector):
+class NodeEditorWnd(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.loadStylesheet("qss/nodestyle.qss")
-        self.console = DebugConsole()
         self.initUI()
-        self.console.setScene(self.scene)
-        
         
     def initUI(self):
         self.setGeometry(0, 0, 800, 600)
@@ -32,9 +30,9 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
 
+        self.console = ConsoleLog()
         # create Graphics Scene
         self.scene = Scene(self.console)
-        # self.grScene = self.scene.grScene
         self.addNodes()
         # self.addUI()
 
@@ -48,6 +46,9 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
         self.setWindowTitle("Node Editor")
         self.show()
         
+    def __str__(self):
+        return "NodeEditorWnd"
+        
     def _getNodeTypes(self):
         os.chdir("./Node_Types")
         nodeTypeList = []
@@ -57,23 +58,18 @@ class NodeEditorWnd(QWidget, ConsoleConnector):
                 nodeTypeList.append(file)
         return nodeTypeList
 
+    # Function for testing nodes
     def addNodes(self):
         scene = self.scene
         node1 = Node(scene, "New Node 1")
         node2 = Node(scene, "New Node 2")
-        node3 = Node(scene, "New Node 3")
-        node4 = Integer.NT_Integer(scene)
-        node5 = Printer.NT_Printer(scene)
-        node6 = Printer.NT_Printer(scene)
-        node7 = Integer.NT_Integer(scene)
+        node3 = Integer.NT_Integer(scene)
+        node4 = Printer.NT_Printer(scene)
 
-        node1.setPos(-350, -250)
-        node2.setPos(-75, 0)
-        node3.setPos(200, -150)
-        #node4.setPos(100, 100)
-        
-        # edge1 = Edge(scene, node1.outputSockets[0], node2.inputSockets[0])
-        # edge2 = Edge(scene, node2.outputSockets[0], node3.inputSockets[0], type=2)
+        node1.setPos(randint(-400, 400), randint(-400, 400))
+        node2.setPos(randint(-400, 400), randint(-400, 400))
+        node3.setPos(randint(-400, 400), randint(-400, 400))
+        node4.setPos(randint(-400, 400), randint(-400, 400))
         
     def addDebugContent(self):
         greenBrush = QBrush(Qt.green)

@@ -1,5 +1,3 @@
-from node_console_connector import ConsoleConnector
-
 
 LEFT_TOP = 1
 
@@ -7,7 +5,7 @@ IOTYPE_INPUT = 0
 IOTYPE_OUTPUT = 1
 
 DEBUG = False
-class Socket(ConsoleConnector):
+class Socket:
     def __init__(self, node, index=0, iotype=0, socket_gr_type=0):
         self.node = node
         self.scene = self.node.scene
@@ -28,7 +26,7 @@ class Socket(ConsoleConnector):
         
     def addEdge(self, edge):
         if self.iotype == IOTYPE_INPUT and len(self.edgeList) == 1:
-            if DEBUG: self.printToConsole("Can not add more than one edge to socket with iotype 'IOTYPE_INPUT'")
+            if DEBUG: self.console.log("Can not add more than one edge to socket with iotype 'IOTYPE_INPUT'")
             edge.remove()
         else:
             self.edgeList.append(edge)
@@ -74,7 +72,7 @@ class Socket(ConsoleConnector):
             edge.updatePositions()
     
     def loadValue(self):
-        if DEBUG: self.printToConsole("Socket in " + str(self.node) + " was ordered to loadValue() ")
+        if DEBUG: self.printToConsole(f"Socket in {self.node} was ordered to loadValue() ")
         if self.iotype == IOTYPE_INPUT:
             if len(self.edgeList) != 0:
                 target_socket = self.edgeList[0].start_socket
@@ -83,7 +81,7 @@ class Socket(ConsoleConnector):
                 if target_socket.iotype != IOTYPE_OUTPUT:
                     raise ValueError("start_socket of connected edge is not iotype=IOTYPE_OUTPUT!")
                 else:
-                    if DEBUG: self.printToConsole("targeting socket from socket in " + str(self.node) + "at socket in "+ str(target_socket.node))
+                    if DEBUG: self.console.log(f"targeting socket from socket in {self.node} to socket in {target_socket.node}")
                     return target_socket.loadValue()
 
         elif self.iotype == IOTYPE_OUTPUT:

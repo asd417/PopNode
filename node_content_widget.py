@@ -2,10 +2,9 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from node_console_connector import ConsoleConnector
 from node_graphics_slot import Slot
 
-class QDMNodeContentWidget(QWidget, ConsoleConnector):
+class QDMNodeContentWidget(QWidget):
     def __init__(self, node, parent=None):
         self.console = node.console
         self.node = node
@@ -57,11 +56,11 @@ class QDMNodeContentWidget(QWidget, ConsoleConnector):
         
     def generateSlots(self, size):
         for i in range(size):
-            slot = self.createDefaultSlotWidget(0)
+            slot = self.createDefaultSlotWidget(i)
             self.widgetSlots.append(slot)
         
     def createDefaultSlotWidget(self, index):
-        slot = Slot(index)
+        slot = QWidget()
         slotLayout = QVBoxLayout()
         slot.setLayout(slotLayout)
         self.layout.addWidget(slot)

@@ -7,7 +7,6 @@ from node_graphics_socket import QDMGraphicsSocket
 from node_graphics_edge import QDMGraphicsEdge
 from node_graphics_node import QDMGraphicsNode
 from node_edge import Edge, TYPE_BEZIER
-from node_console_connector import ConsoleConnector
 
 MODE_NOOP = 1
 MODE_EDGE_DRAG = 2
@@ -16,7 +15,7 @@ EDGE_DRAG_THRESHOLD = 10
 
 DEBUG = True
 
-class QDMGraphicsView(QGraphicsView, ConsoleConnector):
+class QDMGraphicsView(QGraphicsView):
     def __init__(self, console, grscene, parent=None):
         super().__init__(parent)
         self.grScene = grscene
@@ -33,6 +32,7 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         self.zoom = 5
         self.zoomStep = 1
         self.zoomRange = [0, 10]
+        self.setFrameStyle(QFrame.NoFrame)
 
     def initUI(self):
         # QPainter.Antialiasing | QPainter.HighQualityAntialiasing |
@@ -46,7 +46,8 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         self.setDragMode(QGraphicsView.RubberBandDrag)
         
     def mouseMoveEvent(self, event):
-        if self.mode == MODE_EDGE_DRAG:
+        mode = self.mode
+        if mode == MODE_EDGE_DRAG:
             dragEdge_grEdge = self.dragEdge.grEdge
             pos = self.mapToScene(event.pos())
             dragEdge_grEdge.setDestination(pos.x(), pos.y())
@@ -55,16 +56,20 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         super().mouseMoveEvent(event)
         
     def keyPressEvent(self, event):
-        self.printToConsole("Pressed: " + str(event.key()))
+        self.printToConsole(f"Pressed: {event.key()}")
         if event.key() == Qt.Key_Delete:
             self.deleteSelected()
         else:
             super().keyPressEvent(event)
+            
+    def keyReleaseEvent(self, event):
+        self.printToConsole(f"Released: {event.key()}")
+        super().keyReleaseEvent(event)
     
     def deleteSelected(self):
         for item in self.grScene.selectedItems():
             if isinstance(item, QDMGraphicsEdge):
-                item.clearEdgeList()
+                item.edge.remove()
             if isinstance(item, QDMGraphicsNode):
                 item.node.remove()
 
@@ -108,49 +113,43 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         self.last_lmb_click_scene_pos = self.mapToScene(event.pos())
 
         # for socket dragging
-        if type(item) is QDMGraphicsSocket:
-            if self.mode == MODE_NOOP:
-                existingEdgeList = item.socket.edgeList
-
-                self.mode = MODE_EDGE_DRAG
-                self.edgeDragStart(item)
-                # prevents the Node from moving when pressing part of the socket above nodes
-                return
-        
-        if self.mode == MODE_NODE_DRAG:
-            return
-        
         if self.mode == MODE_NOOP:
-                if DEBUG: self.printToConsole("Dragging Node")
-                widgets = self.getAllWidgetsAtPos(pos)
-                for widget in widgets:
-                    if DEBUG: self.printToConsole(f'{widget}')
-                    if widget != item and type(widget) is QDMGraphicsEdge:
-                        widget.setColor("#39E9c7")
-                        self.mode = MODE_NODE_DRAG
-                        return
+            if type(item) is QDMGraphicsSocket:
+                if item.socket.iotype == IOTYPE_INPUT and len(item.socket.edgeList) != 0:
+                    originalEdge = item.socket.edgeList[0]
+                    newStartingSocket = originalEdge.start_socket
+                    self.printToConsole(f"newStartingSocket ist {newStartingSocket}")
+                    originalEdge.remove()
+                    self.mode = MODE_EDGE_DRAG
+                    self.edgeDragStart(newStartingSocket)
+                    return
+                else:
+                    self.mode = MODE_EDGE_DRAG
+                    self.edgeDragStart(item)
+                    # prevents the Node from moving when pressing part of the socket above nodes
+                    return
+            else:
+                super().mousePressEvent(event)
+                return
 
         super().mousePressEvent(event)
 
     def leftMouseButtonRelease(self, event):
-
         item = self.getItemAtClick(event)
-
-        if self.mode == MODE_EDGE_DRAG:
+        mode = self.mode
+        if mode == MODE_EDGE_DRAG:
             # End dragging edge
             self.edgeDragEnd(item)
             return
-
         super().mouseReleaseEvent(event)
 
     def rightMouseButtonPress(self, event):
         super().mousePressEvent(event)
         item = self.getItemAtClick(event)
-
         if DEBUG:
-            if isinstance(item, QDMGraphicsEdge): self.printToConsole('RMB DEBUG: ' + str(item.edge) + ' connecting sockets:' + 
-                                                                      str(item.edge.start_socket) + ' <--> ' + str(item.edge.end_socket))
-            if type(item) is QDMGraphicsSocket: self.printToConsole('RMB DEBUG: ' + str(item.socket) + ' has' + str(len(item.socket.edgeList)) + 'edges')
+            if isinstance(item, QDMGraphicsEdge): 
+                self.printToConsole(f"RMB DEBUG: {item.edge} connecting sockets:  {item.edge.start_socket} <--> {item.edge.end_socket}")
+            if type(item) is QDMGraphicsSocket: self.printToConsole("RMB DEBUG: {item.socket} has {len(item.socket.edgeList)} edges")
 
             if item is None:
                 self.printToConsole('SCENE:')
@@ -165,7 +164,6 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
     def wheelEvent(self, event):
         # calculate zoom factor
         zoomOutFactor = 1/self.zoomInFactor
-
         # calculate the zoom
         if event.angleDelta().y() > 0:
             zoomFactor = self.zoomInFactor
@@ -173,7 +171,6 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         else:
             zoomFactor = zoomOutFactor
             self.zoom -= self.zoomStep
-
         clamped = False
         if self.zoom < self.zoomRange[0]:
             self.zoom, clamped = self.zoomRange[0], True
@@ -194,11 +191,16 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
         #item type: QDMGraphicsSocket
         if DEBUG: self.printToConsole('View::edgeDragStart ~ Start dragging edge')
         if DEBUG: self.printToConsole('View::edgeDragStart ~   assign Start Socket')
-        itemSocket = item.socket
-        if type(item) is QDMGraphicsSocket: 
+        
+        if type(item) is QDMGraphicsSocket:
+            itemSocket = item.socket
             self.dragEdgeStartingSocket = itemSocket
 
             self.dragEdge = Edge(self.grScene.scene, itemSocket, None, TYPE_BEZIER)
+        elif type(item) is Socket:
+            self.dragEdgeStartingSocket = item
+
+            self.dragEdge = Edge(self.grScene.scene, item, None, TYPE_BEZIER)
 
     #TODO Fix so that edge calling uses edgeList
     def edgeDragEnd(self, item):
@@ -240,38 +242,3 @@ class QDMGraphicsView(QGraphicsView, ConsoleConnector):
             if (endingSocket is not startingSocket) and (startingSocket.iotype != endingSocket.iotype) and (startingSocket.node is not endingSocket.node):
                 return True
         return False
-
-    def deltaMouseClickRelease(self, event):
-        """Returns QPointF object representing the delta from click and release"""
-        new_lmb_release_scene_pos = self.mapToScene(event.pos())
-        deltaMouseV = new_lmb_release_scene_pos - self.last_lmb_click_scene_pos
-        return (deltaMouseV.x() * deltaMouseV.x()) + (deltaMouseV.y() * deltaMouseV.y())
-
-
-     # Source: https://stackoverflow.com/questions/27363267/get-all-widgets-under-cursor
-    def getAllWidgetsAtPos(self, pos):
-        return [w for w in self.widgets_at(pos)]
-    
-    def widgets_at(self, pos):
-        """Return ALL widgets at `pos`
-
-        Arguments:
-            pos (QPoint): Position at which to get widgets
-
-        """
-
-        widgets = []
-        widget_at = qApp.widgetAt(pos)
-
-        while widget_at:
-            widgets.append(widget_at)
-
-            # Make widget invisible to further enquiries
-            widget_at.setAttribute(Qt.WA_TransparentForMouseEvents)
-            widget_at = qApp.widgetAt(pos)
-
-        # Restore attribute
-        for widget in widgets:
-            widget.setAttribute(Qt.WA_TransparentForMouseEvents, False)
-
-        return widgets

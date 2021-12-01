@@ -5,3 +5,182 @@ QDMNodeContentWidget {
 QDMNodeContentWidget QLabel {
     color: #e0e0e0;
 }
+
+NodeEditorWnd {
+    background-color: #3E3E3E;
+}
+
+QDMGraphicsView {
+    color: #494949;
+    background-color: transparent;
+    border-color: red;
+    
+    alternate-background-color: red;
+    outline-color:blue;
+}
+
+QPushButton {
+    background-color: #545454;
+    color: #D5D5D5;
+    border: none;
+}
+
+QPushButton:hover {
+    background-color: #666666;
+}
+
+QPushButton:pressed {
+    background-color: #888888;
+}
+
+QLabel QGroupBox QTextBrowser{
+    color: #EEEEEE;
+    border: none;
+}
+
+QTextBrowser {
+	color: #EEEEEE;
+	border: none;
+	background-color: transparent;
+}
+
+/* 
+Scrollbar styling
+https://stackoverflow.com/questions/67442347/scrollbar-qstylesheet-displayed-with-a-background-when-it-should-be-transparent 
+*/
+/* VERTICAL SCROLLBAR */
+QScrollBar:vertical {
+    border: none;
+    background: #2E2E2E;
+    width: 14px;
+    margin: 15px 0 15px 0;
+    border-radius: 0px;
+    outline-color: blue;
+}
+/*  HANDLE BAR VERTICAL */
+QScrollBar::handle:vertical {
+    background-color: #545454;
+    min-height: 30px;
+    border-radius: 7px;
+}
+QScrollBar::handle:vertical:hover {
+    background-color: #666666;
+}
+QScrollBar::handle:vertical:pressed {
+    background-color: #888888;
+}
+/* BTN TOP - SCROLLBAR */
+QScrollBar::sub-line:vertical {
+    border: transparent;
+    background-color: #545454;
+    height: 15px;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+QScrollBar::sub-line:vertical:hover {
+    background-color: #666666;
+}
+QScrollBar::sub-line:vertical:pressed {
+    background-color: #888888;
+}
+
+/* BTN BOTTOM - SCROLLBAR */
+QScrollBar::add-line:vertical {
+    border: transparent;
+    background-color: #545454;
+    height: 15px;
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+QScrollBar::add-line:vertical:hover {
+    background-color: #666666;
+}
+QScrollBar::add-line:vertical:pressed { 
+    background-color: #888888;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    width: 0px;
+    height: 0px;
+}
+
+
+/* HORIZONTAL SCROLLBAR */
+QScrollBar:horizontal {
+    border: none;
+    background: #2E2E2E;
+    height: 14px;
+    margin: 0 15px 0 15px;
+    border-radius: 0px;
+}
+/*  HANDLE BAR HORIZONTAL */
+QScrollBar::handle:horizontal {
+    background-color: #545454;
+    min-width: 30px;
+    border-radius: 7px;
+}
+QScrollBar::handle:horizontal:hover {
+    background-color: #666666;
+}   
+QScrollBar::handle:horizontal:pressed {
+    background-color: #888888;
+}
+
+/* BTN RIGHT - SCROLLBAR */
+QScrollBar::add-line:horizontal {
+    border: transparent;
+    background-color: #545454;
+    width: 15px;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    subcontrol-position: right;
+    subcontrol-origin: margin;
+}
+QScrollBar::add-line:horizontal:hover {
+    background-color: #666666;
+}
+QScrollBar::add-line:horizontal:pressed { 
+    background-color: #888888;
+}
+
+/* BTN LEFT - SCROLLBAR */
+QScrollBar::sub-line:horizontal {
+    border: transparent;
+    background-color: #545454;
+    width: 15px;
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
+    subcontrol-position: left;
+    subcontrol-origin: margin;
+}
+QScrollBar::sub-line:horizontal:hover {
+    background-color: #666666;
+}
+QScrollBar::sub-line:horizontal:pressed {
+    background-color: #888888;
+}
+QScrollBar:left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
+    width: 0px;
+    height: 0px;
+}
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+   background: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+   background: none;
+}
+
+/*
+https://www.geeksforgeeks.org/pyqt5-qscrollbar-getting-style-sheet/
+2E2E2E
+333333
+494949
+5E5E5E
+888888
+BBBBBB
+words: EEEEEE
+*/

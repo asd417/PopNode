@@ -1,5 +1,4 @@
 from node_graphics_edge import *
-from node_console_connector import ConsoleConnector
 
 TYPE_DIRECT = 1
 TYPE_BEZIER = 2
@@ -8,7 +7,7 @@ IOTYPE_INPUT = 0
 IOTYPE_OUTPUT = 1
 
 DEBUG = True
-class Edge(ConsoleConnector):
+class Edge:
     def __init__(self, scene, start_socket, end_socket, type=1):
         self.scene = scene
         self.console = self.scene.console
@@ -39,8 +38,6 @@ class Edge(ConsoleConnector):
             self.remove()
         else:
             source_pos = self.start_socket.getSocketPosition()
-
-            if DEBUG: self.printToConsole("Socket Position" + str(source_pos[0]) + str(source_pos[1]))
             source_pos[0] += self.start_socket.node.grNode.pos().x()
             source_pos[1] += self.start_socket.node.grNode.pos().y()
             self.grEdge.setSource(*source_pos)
@@ -55,18 +52,16 @@ class Edge(ConsoleConnector):
             
         
     def remove_from_socket(self):
+        if DEBUG: self.printToConsole("Edge::remove_from_socket()")
         try:
             if self.start_socket is not None:
                 self.start_socket.edgeList.remove(self)
             if self.end_socket is not None:
                 self.end_socket.edgeList.remove(self)
         except:
-            if DEBUG: self.printToConsole("Attempted to remove edge " + str(self) + " but this edge is already removed")
-        self.start_socket = None
-        self.end_socket = None
+            if DEBUG: self.printToConsole(f"Attempted to remove edge {self} but this edge is already removed")
         
     def remove(self):
         self.remove_from_socket()
         self.scene.grScene.removeItem(self.grEdge)
-        self.grEdge = None
         self.scene.removeEdge(self)

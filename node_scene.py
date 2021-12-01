@@ -1,8 +1,6 @@
 from node_graphics_scene import QDMGraphicsScene
-from node_console_connector import ConsoleConnector
-
 DEBUG = True
-class Scene(ConsoleConnector):
+class Scene:
     def __init__(self, console):
         self.nodes = []
         self.edges = []
@@ -14,7 +12,7 @@ class Scene(ConsoleConnector):
         self.initUI()
 
     def initUI(self):
-        self.grScene = QDMGraphicsScene(self)
+        self.grScene = QDMGraphicsScene(self, self.console)
         self.grScene.setGrScene(self.scene_width, self.scene_height)
 
     def addNode(self, node):
@@ -27,10 +25,10 @@ class Scene(ConsoleConnector):
         try:
             self.nodes.remove(node)
         except:
-            if DEBUG: self.printToConsole('Scene::removeNode ~ Node Already Removed')
+            if DEBUG: self.console.log('Scene::removeNode ~ Node Already Removed')
 
     def removeEdge(self, edge):
         try:
             self.edges.remove(edge)
         except:
-            if DEBUG: self.printToConsole('Scene::removeEdge ~ Edge Already Removed')
+            if DEBUG: self.console.log('Scene::removeEdge ~ Edge Already Removed')

@@ -1,10 +1,9 @@
 
-from node_console_connector import ConsoleConnector
 from ui_graphics import UIGraphics
 from Node_Types import *
 
 DEBUG = True
-class UI(ConsoleConnector):
+class UI:
     def __init__(self, scene, nodetypes):
         self.scene = scene
         self.console = self.scene.console
@@ -17,7 +16,7 @@ class UI(ConsoleConnector):
         nodeClassName = "NT_" + nodeChoice
         nodeGenString = nodeChoice + "." + nodeClassName + "(self.scene)"
         
-        if DEBUG: self.printToConsole("Creating Instance for Node Type: " + str(self.nodeChoice))
+        if DEBUG: self.console.log("Creating Instance for Node Type: " + str(self.nodeChoice))
         eval(nodeGenString)
             
     def nodeChoice(self, text):

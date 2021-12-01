@@ -10,11 +10,14 @@ from node_content_widget import QDMNodeContentWidget
 
 # https://www.pythonguis.com/tutorials/pyqt-basic-widgets/
 
-DEBUG = True
+DEBUG = False
 #Node Type
 class NT_Printer(Node):
     def __init__(self, scene):
         super().__init__(scene, title="Printer")
+        
+    def __str__(self):
+        return "<Printer Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
 
     #Called from within the Node for loading custom content widget
     def initContent(self):
@@ -24,12 +27,12 @@ class NT_Printer(Node):
     def onNodeUpdate(self):
         if DEBUG: self.printToConsole("onNodeUpdate in " + str(self))
         inputV = self.inputValues[0]
-        self.printValue = inputV
+        if inputV is None:
+            self.printValue = "Invalid Input"
+        else:
+            self.printValue = inputV
         self.outputValues[0] = inputV
         self.content.display()
-        
-    def __str__(self):
-        return "<Printer Node %s..%s>" % (hex(id(self))[2:5], hex(id(self))[-3:])
 
 #Node Type Widget
 class NTW_Printer(QDMNodeContentWidget):
@@ -37,20 +40,14 @@ class NTW_Printer(QDMNodeContentWidget):
         super().__init__(node)
         self.inputSocketTypes = [(0,0)]
         self.outputSocketTypes = [(0,0)]
-        
-        self.width = None
         self.height = 90
-        self.edge_size = None
-        self.title_height = None
-        self.title_height = None
-        self.padding = None
 
     def initUI(self):
         self.wdg_label = QLabel("No Input")
         self.addWidgetToWidgetSlot(0, self.wdg_label)
-
-    def grNodeEdit(self, grNode):
-        grNode.setHeight(60)
+        
+    def initWidgetSlots(self):
+        self.slotCount = 1
         
     def display(self):
         if DEBUG: self.printToConsole("Updating Printer Node")

@@ -1,14 +1,16 @@
 from node_graphics_node import QDMGraphicsNode, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP, RIGHT_BOTTOM
 from node_content_widget import QDMNodeContentWidget
 from node_socket import Socket, IOTYPE_INPUT, IOTYPE_OUTPUT
-from node_console_connector import ConsoleConnector
 
 DEBUG = True
-class Node(ConsoleConnector):
-    def __init__(self, scene, title="Undefined Node"):
+class Node:
+    def __init__(self, scene, title="Undefined Node", console=None):
         self.scene = scene
         self.title = title
-        self.console = scene.console
+        if console is None:
+            self.console = scene.console
+        else:
+            self.console = console
 
         self.initContent()
         content = self.content
@@ -38,7 +40,7 @@ class Node(ConsoleConnector):
 
     def updateConnectedEdges(self):
         for socket in self.inputSockets + self.outputSockets:
-            if DEBUG: self.printToConsole("checking if " + str(socket) + "has Edge")
+            if DEBUG: self.console.log(f"checking if {socket} has Edge")
             if socket.hasEdge():
                 
                 socket.updateEdgePositions()
@@ -51,7 +53,7 @@ class Node(ConsoleConnector):
                         edge.end_socket.node.updateThisNode()
                 
     def updateInputValues(self):
-        if DEBUG: self.printToConsole("updateInputValues called on" + str(self))
+        if DEBUG: self.console.log(f"updateInputValues called on {self}")
         if len(self.inputSockets) != 0:
             i = 0
             for socket in self.inputSockets:
@@ -66,7 +68,7 @@ class Node(ConsoleConnector):
         self.updateConnectedNodes()
 
     def remove(self):
-        if DEBUG: self.printToConsole("Removing Node" + str(self))
+        if DEBUG: self.console.log(f"Removing Node: {self}")
 
         # remove all connected edges
         for socket in (self.inputSockets + self.outputSockets):

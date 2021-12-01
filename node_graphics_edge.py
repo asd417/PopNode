@@ -4,13 +4,12 @@ from PyQt5.QtGui import *
 import math
 
 from node_socket import *
-from node_console_connector import ConsoleConnector
 
 DRAW_DRAG = 0
 DRAW_CONNECTED = 1
 DEBUG = True
 
-class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
+class QDMGraphicsEdge(QGraphicsPathItem):
     def __init__(self, edge, parent=None):
         super().__init__(parent)
         
@@ -34,7 +33,7 @@ class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
         self._pen_hovered.setWidthF(5.0)
         
         self.setFlag(QGraphicsItem.ItemIsSelectable)
-        #self.setAcceptHoverEvents(True)
+        self.setAcceptHoverEvents(True)
         self.setZValue(-1)
         
         self.posSource = [0, 0]
@@ -93,6 +92,12 @@ class QDMGraphicsEdge(QGraphicsPathItem, ConsoleConnector):
             return self.calcPath(self.posSource, posDestination)
         else:
             raise NotImplementedError("EDGE DRAWMODE UNKNOWN!!!(not DRAW_DRAG or DRAW_CONNECTED)")
+            
+    def boundingRect(self):
+        if self.edge.start_socket is not None:
+            return self.shape().boundingRect()
+        else:
+            return QRectF(0,0,1,1)
         
     def updatePath(self):
         path = self.shape()
@@ -136,20 +141,3 @@ class QDMGraphicsEdgeBezier(QDMGraphicsEdge):
             endpos[0] - deltax, endpos[1],
             endpos[0], endpos[1])
         return path
-        
-"""
-void QGraphicsItem::hoverEnterEvent(QGraphicsSceneHoverEvent * event)
-This event handler, for event event, can be reimplemented to receive hover enter events for this item. The default implementation calls update(); otherwise it does nothing.
-
-Calling QEvent::ignore() or QEvent::accept() on event has no effect.
-
-See also hoverMoveEvent(), hoverLeaveEvent(), sceneEvent(), and setAcceptHoverEvents().
-
-[virtual protected]void QGraphicsItem::hoverLeaveEvent(QGraphicsSceneHoverEvent * event)
-This event handler, for event event, can be reimplemented to receive hover leave events for this item. The default implementation calls update(); otherwise it does nothing.
-
-Calling QEvent::ignore() or QEvent::accept() on event has no effect.
-
-See also hoverEnterEvent(), hoverMoveEvent(), sceneEvent(), and setAcceptHoverEvents().
-
-"""

@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication
+from PyQt5 import QtWidgets, QtCore, QtGui #pyqt stuff
 
 from node_editor_wnd import NodeEditorWnd
 
@@ -8,8 +8,13 @@ from node_editor_wnd import NodeEditorWnd
 # for extensive tutorial on node-editor in qtpy
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-
+    
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True) #enable highdpi scaling
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True) #use highdpi icons
+    
+    app = QtWidgets.QApplication(sys.argv)
     wnd = NodeEditorWnd()
-
     sys.exit(app.exec_())
+    
+
+

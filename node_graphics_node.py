@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
-from node_console_connector import ConsoleConnector
 from node_graphics_socket import QDMGraphicsSocket
 
 
@@ -13,7 +12,7 @@ RIGHT_BOTTOM = 4
 
 IOTYPE_INPUT = 0
 IOTYPE_OUTPUT = 1
-class QDMGraphicsNode(QGraphicsItem, ConsoleConnector):
+class QDMGraphicsNode(QGraphicsItem):
     def __init__(self, node, parent=None):
         super().__init__(parent)
         self.node = node
