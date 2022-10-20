@@ -5,7 +5,7 @@ from node_editor_wnd import NodeEditorWnd
 
 # credit to
 # https://www.youtube.com/playlist?list=PLZSNHzwDCOggHLThIbCxUhWTgrKVemZkz
-# for extensive tutorial on node-editor in qtpy
+# for extensive tutorial on node-editor in qtpy .
 
 if __name__ == '__main__':
     
