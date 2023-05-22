@@ -6,7 +6,7 @@ TYPE_BEZIER = 2
 IOTYPE_INPUT = 0
 IOTYPE_OUTPUT = 1
 
-DEBUG = True
+DEBUG = False
 class Edge:
     def __init__(self, scene, start_socket, end_socket, type=1):
         self.scene = scene

@@ -2,7 +2,7 @@ from node_graphics_node import QDMGraphicsNode, LEFT_TOP, LEFT_BOTTOM, RIGHT_TOP
 from node_content_widget import QDMNodeContentWidget
 from node_socket import Socket, IOTYPE_INPUT, IOTYPE_OUTPUT
 
-DEBUG = True
+DEBUG = False
 class Node:
     def __init__(self, scene, title="Undefined Node", console=None):
         self.scene = scene

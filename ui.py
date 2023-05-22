@@ -2,7 +2,7 @@
 from ui_graphics import UIGraphics
 from Node_Types import *
 
-DEBUG = True
+DEBUG = False
 class UI:
     def __init__(self, scene, nodetypes):
         self.scene = scene

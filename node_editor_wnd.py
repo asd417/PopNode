@@ -15,7 +15,7 @@ from Node_Types import *
 
 import glob, os
 
-DEBUG = True
+DEBUG = False
 
 class NodeEditorWnd(QWidget):
     def __init__(self, parent=None):

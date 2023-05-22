@@ -37,7 +37,7 @@ class QDMGraphicsSocket(QGraphicsItem):
             painter.setPen(self._debugpen)
         else:
             painter.setPen(self._pen)
-        painter.drawEllipse(-r, -r, 2*r, 2*r)
+        painter.drawEllipse(int(-r), int(-r), int(2*r), int(2*r))
 
     def boundingRect(self):
         olw = self.outline_width

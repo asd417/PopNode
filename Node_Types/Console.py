@@ -55,7 +55,7 @@ class NTW_Console(QDMNodeContentWidget):
         
     def initUI(self):
         self.consoleBrowser = QTextBrowser()
-        self.add_widget_to_widget_slot(0, self.consoleBrowser)
+        self.addWidgetToWidgetSlot(0, self.consoleBrowser)
         self.button_clear = QPushButton()
         self.button_clear.clicked.connect(self.node.clear_console)
         
@@ -65,7 +65,7 @@ class NTW_Console(QDMNodeContentWidget):
         horizontal_slot.layout().addWidget(self.button_clear)
         horizontal_slot.layout().addWidget(self.button_export)
         
-        self.add_widget_to_widget_slot(1, horizontal_slot)
+        self.addWidgetToWidgetSlot(1, horizontal_slot)
         
     def initWidgetSlots(self):
         self.slotCount = 2

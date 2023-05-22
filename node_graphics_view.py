@@ -13,7 +13,7 @@ MODE_EDGE_DRAG = 2
 MODE_NODE_DRAG = 3
 EDGE_DRAG_THRESHOLD = 10
 
-DEBUG = True
+DEBUG = False
 
 class QDMGraphicsView(QGraphicsView):
     def __init__(self, console, grscene, parent=None):
@@ -56,14 +56,14 @@ class QDMGraphicsView(QGraphicsView):
         super().mouseMoveEvent(event)
         
     def keyPressEvent(self, event):
-        self.printToConsole(f"Pressed: {event.key()}")
+        #self.printToConsole(f"Pressed: {event.key()}")
         if event.key() == Qt.Key_Delete:
             self.deleteSelected()
         else:
             super().keyPressEvent(event)
             
     def keyReleaseEvent(self, event):
-        self.printToConsole(f"Released: {event.key()}")
+        #self.printToConsole(f"Released: {event.key()}")
         super().keyReleaseEvent(event)
     
     def deleteSelected(self):
@@ -118,7 +118,7 @@ class QDMGraphicsView(QGraphicsView):
                 if item.socket.iotype == IOTYPE_INPUT and len(item.socket.edgeList) != 0:
                     originalEdge = item.socket.edgeList[0]
                     newStartingSocket = originalEdge.start_socket
-                    self.printToConsole(f"newStartingSocket ist {newStartingSocket}")
+                    #self.printToConsole(f"newStartingSocket ist {newStartingSocket}")
                     originalEdge.remove()
                     self.mode = MODE_EDGE_DRAG
                     self.edgeDragStart(newStartingSocket)
@@ -225,7 +225,7 @@ class QDMGraphicsView(QGraphicsView):
             if dragEdgeStartingSocket.iotype == IOTYPE_INPUT:
                 # reverse the start_socket and end_socket to fix
                 # end_socket of any edge should has iotype of IOTYPE_INPUT
-                self.printToConsole("Edge started on Input type socket! Reversing order...")
+                #self.printToConsole("Edge started on Input type socket! Reversing order...")
                 dragEdge.start_socket = targetEdgeEndingSocket
                 dragEdge.end_socket = dragEdgeStartingSocket
             else:

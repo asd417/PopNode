@@ -7,7 +7,7 @@ from node_socket import *
 
 DRAW_DRAG = 0
 DRAW_CONNECTED = 1
-DEBUG = True
+DEBUG = False
 
 class QDMGraphicsEdge(QGraphicsPathItem):
     def __init__(self, edge, parent=None):

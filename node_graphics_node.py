@@ -112,9 +112,9 @@ class QDMGraphicsNode(QGraphicsItem):
     def initContent(self):
         edgeSize = self.edge_size
         self.grContent = QGraphicsProxyWidget(self)
-        self.content.setGeometry(edgeSize, self.title_height + edgeSize,
-                                self.width - 2*edgeSize,
-                                self.height - 2*edgeSize - self.title_height
+        self.content.setGeometry(int(edgeSize), int(self.title_height + edgeSize),
+                                int(self.width - 2*edgeSize),
+                                int(self.height - 2*edgeSize - self.title_height)
                                 )
         self.grContent.setWidget(self.content)
 

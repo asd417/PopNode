@@ -10,7 +10,7 @@ from node_content_widget import QDMNodeContentWidget
 
 # https://www.pythonguis.com/tutorials/pyqt-basic-widgets/
 
-DEBUG = True
+DEBUG = False
 
 op_list = ["+", "-", "*", "/"]
 

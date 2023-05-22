@@ -43,7 +43,7 @@ class NTW_Integer(QDMNodeContentWidget):
         spinner = QSpinBox()
         spinner.setRange(-100000, 100000)
         spinner.valueChanged.connect(self.spinnerValueChanged)
-        self.add_widget_to_widget_slot(0, spinner)
+        self.addWidgetToWidgetSlot(0, spinner)
         
     def initWidgetSlots(self):
         self.slotCount = 1

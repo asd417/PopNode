@@ -1,5 +1,5 @@
 from node_graphics_scene import QDMGraphicsScene
-DEBUG = True
+DEBUG = False
 class Scene:
     def __init__(self, console):
         self.nodes = []
